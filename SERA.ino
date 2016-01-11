@@ -53,27 +53,11 @@ void setup(){
   attachInterrupt(5, line, HIGH);
   
   Serial.begin(9600);
-  Wire.begin();
-
-/*  compass.setRange(HMC5883L_RANGE_1_3GA);
-  compass.setMeasurementMode(HMC5883L_CONTINOUS);
-  compass.setDataRate(HMC5883L_DATARATE_30HZ);
-  compass.setSamples(HMC5883L_SAMPLES_8);
-  compass.setOffset(125, 90);
-*/
+  compass.begin();
+  compass.setOffset(-180, -160);
 }
 
 void loop(){
-  /*
-  grip_grab.attach(GRAB);
-  delay(1000);
-  grip_grab.write(0);
-  delay(1000);
-  grip_grab.detach();
-  */
-  //Serial.println(IR());
-  //delay(500);
-  
   if(Serial.available()){
     char input  = Serial.read();
       switch (input){
@@ -83,7 +67,7 @@ void loop(){
         case 'd': turn_R();   break;
         case 's': halt();     break;
         case 'x': backward(); break;
-        
+  
         case 'r': turn_90l(); break;
         case 't': turn_90r(); break;
         
@@ -97,12 +81,12 @@ void loop(){
         case 'v': tilt(); break;
 
         //Gripper
-        case 'p': Pick(); break;
-        case 'l': Drop(); break;
+        case 'p': grip(); break;
+        case 'l': leave(); break;
         case 'i': InitGripper(); break;
+
         
-        case 'q': grip(); break;
-        //case 'g': compassCal(); break;
+        case 'g': compassCal(); break;
 
       }
    }
@@ -118,7 +102,7 @@ void grip()
   while(1)
   {
     dis = IR();
-    if (dis < 17.75)
+    if (dis < 17)
     {
       Pick();
       break;
@@ -128,7 +112,29 @@ void grip()
       halt();
     }
   }
-  Serial.println("1");
+  Serial.print("1");
+  return;
+}
+
+void leave()
+{
+  float dis;
+  
+  while(1)
+  {
+    dis = IR();
+    if (dis < 17.5)
+    {
+      Drop();
+      break;
+    }else{
+      forward();
+      delay(50);
+      halt();
+    }
+  }
+  
+  Serial.print("1");
   return;
 }
 
@@ -148,9 +154,10 @@ void Pick()
 
 void Drop()
 {
+  grip_grab.attach(GRAB);
   grip_rotate.attach(ROTATE);
   
-  grip_grab.write(80);
+  grip_grab.write(150);
   delay(2000);
   
   grip_grab.detach();
@@ -164,7 +171,7 @@ void InitGripper()
 
   delay(1000);
   
-  grip_grab.write(90);
+  grip_grab.write(150);
   delay(1000);
   grip_rotate.write(0);
   delay(1000);
@@ -172,7 +179,7 @@ void InitGripper()
   grip_grab.detach();
   grip_rotate.detach();
   
-  Serial.println("1");
+  Serial.print("1");
 }
 
 
@@ -227,21 +234,27 @@ void turn_R()
 void turn_ll()
 {
   turn_L();
-  delay(40);
+  delay(30);
   halt();
 }
 
 void turn_lr()
 {
   turn_R();
-  delay(40);
+  delay(30);
   halt();
 }
 
 void turn_90l(){
   int degree;
-  int destl = compassValue() + 88;
-  int desth = compassValue() + 92;
+
+  //90 Degree Turn
+  //int destl = compassValue() + 89;
+  //int desth = compassValue() + 91;
+  
+  //45 Degree Turn
+  int destl = compassValue() + 43;
+  int desth = compassValue() + 47;
   
   if(destl > 360) destl -= 360;
   if(desth > 360) desth -= 360;
@@ -250,18 +263,27 @@ void turn_90l(){
     turn_L();
     delay(20);
     halt();
+    delay(10);
     degree = compassValue();
     degree = compassValue();
     degree = compassValue();
+    //Serial.println("*");
   }while((degree < destl) | (degree > desth));
   
   halt();  
+  Serial.print("1");
 }
 
 void turn_90r(){
   int degree;
-  int destl = compassValue() - 92;
-  int desth = compassValue() - 88;
+  
+  //90 Degree Turn
+  //int destl = compassValue() - 91;
+  //int desth = compassValue() - 89;
+  
+  //45 Degree Turn
+  int destl = compassValue() - 47;
+  int desth = compassValue() - 43;
 
   if(destl < 0) destl += 360;
   if(desth < 0) desth += 360;
@@ -270,12 +292,15 @@ void turn_90r(){
     turn_R();
     delay(20);
     halt();
+    delay(10);
     degree = compassValue();
     degree = compassValue();
     degree = compassValue();
+    //Serial.println("*");
   }while((degree < destl) | (degree > desth));
   
   halt();  
+  Serial.print("1");
 }
 
 
@@ -369,6 +394,7 @@ void compassCal()
   Serial.println(offX);
   Serial.println(offY);
   compass.setOffset(offX, offY);
+
   
 }
 

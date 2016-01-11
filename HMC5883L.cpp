@@ -42,7 +42,7 @@ bool HMC5883L::begin()
     setRange(HMC5883L_RANGE_1_3GA);
     setMeasurementMode(HMC5883L_CONTINOUS);
     setDataRate(HMC5883L_DATARATE_15HZ);
-    setSamples(HMC5883L_SAMPLES_1);
+    setSamples(HMC5883L_SAMPLES_8);
 
     mgPerDigit = 0.92f;
 
